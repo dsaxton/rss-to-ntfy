@@ -1,0 +1,14 @@
+version: "3"
+
+tasks:
+    build:
+        desc: Build the rss-to-ntfy binary
+        cmds:
+            - go build -v -ldflags="-w -s" -o rss-to-ntfy main.go
+    deploy:
+        desc: Deploy the binary and feeds.yaml to a server
+        deps: [build]
+        cmds:
+            - ssh utility 'sudo systemctl stop rss-to-ntfy.service'
+            - scp rss-to-ntfy feeds.yaml utility:/home/ubuntu/
+            - ssh utility 'sudo systemctl start rss-to-ntfy.service'

@@ -1,0 +1,7 @@
+*.yaml
+*.xml
+*.opml
+*.rss
+*.atom
+!Taskfile.yaml
+rss-to-ntfy
