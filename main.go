@@ -44,6 +44,7 @@ type Entry struct {
 	Title     string `xml:"title"`
 	Link      Link   `xml:"link"`
 	Published string `xml:"published"`
+	Updated   string `xml:"updated"`
 }
 
 type Link struct {
@@ -214,7 +215,7 @@ func processRSSFeed(feed *Feed, rss Rss, logger *log.Entry) {
 
 func processAtomFeed(feed *Feed, atom Atom, logger *log.Entry) {
 	for _, entry := range atom.Entries {
-		published, err := parseDate(entry.Published)
+		published, err := getAtomDate(entry)
 		if err != nil {
 			logger.Errorf("Error parsing date for entry in feed: %v", err)
 			continue
@@ -226,6 +227,16 @@ func processAtomFeed(feed *Feed, atom Atom, logger *log.Entry) {
 			sendNotification(feed.NtfyTopic, entry.Title, entry.Link.Href, logger)
 		}
 	}
+}
+
+func getAtomDate(entry Entry) (time.Time, error) {
+	// Prefer the updated time as this should be the latest
+	if updated, err := parseDate(entry.Updated); err == nil {
+		return updated, nil
+	}
+
+	// If updated failed return the published attempt
+	return parseDate(entry.Published)
 }
 
 func parseDate(dateString string) (time.Time, error) {
