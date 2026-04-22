@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/xml"
 	"flag"
 	"fmt"
@@ -250,17 +249,18 @@ func parseDate(dateString string) (time.Time, error) {
 }
 
 func sendNotification(topic, title, link string, logger *log.Entry) {
-	message := fmt.Sprintf("%s\n\n%s", title, link)
-	resp, err := http.Post(topic, "text/plain", bytes.NewBuffer([]byte(message)))
+	req, _ := http.NewRequest("POST", topic, strings.NewReader(link))
+	req.Header.Set("Title", title)
+	req.Header.Set("Actions", fmt.Sprintf("view, View Update, %s, clear=true", link))
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		logger.Errorf("Error sending notification: %v", err)
 		return
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		logger.Errorf("Failed to send notification: %s", resp.Status)
 	} else {
-		logger.Infof("Notification sent:\n\n%s", message)
+		logger.Infof("Notification sent:\n\n%s - %s", title, link)
 	}
 }
